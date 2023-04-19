@@ -1,16 +1,30 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import avatar from '../assets/profile.png'
 import styles from '../styles/Username.module.css'
 import { useForm } from "react-hook-form";
+import toast from 'react-hot-toast';
 
 export default function Password() {
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const navigate = useNavigate();
 
   function handleFormSubmit(data) {
-    console.log(data)
+    toast.success('Successfully Logged In', {
+      position: 'top-center',
+      duration: 2000
+    });
+    console.log(data);
     reset();
+    navigate('/profile');
   }
+
+  // To Show Error Toast
+  useEffect(() => {
+    if (errors.password) {
+      toast.error(errors.password?.message, { duration: 1500 });
+    }
+  }, [errors.password])
 
   return (
     <>
@@ -26,12 +40,11 @@ export default function Password() {
                 <img alt='avtar' className={styles.profile_img} src={avatar} />
               </div>
               <div className="textbox flex  flex-col items-center">
-                <input type="text" placeholder='Username' className={styles.textbox} {...register('password', { required: true, minLength: { value: 3, message: 'Enter min 3 characters' } })} />
-                <button type='submit' className={styles.btn}>Let's Go</button>
-                {errors.username && <p>{errors.username.message}</p>}
+                <input type="password" placeholder='Password' className={styles.textbox} {...register('password', { required: { value: true, message: 'Password is required.' }, minLength: { value: 3, message: 'Password length is min 3 characters' }, pattern: { value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/, message: 'Password must have Minimum 8 characters, atleast 1 uppercase, 1 lowercase, 1 number and 1 special character' } })} />
+                <button type='submit' className={styles.btn}>Sign In</button>
               </div>
               <div className="text-center py-4">
-                <span className='text-gray-500'>Not a member <Link to='/register' className='text-red-500'>Register Now</Link></span>
+                <span className='text-gray-500'>Forgot Password? <Link to='/recovery' className='text-red-500'>Reset Password</Link></span>
               </div>
             </form>
           </div>

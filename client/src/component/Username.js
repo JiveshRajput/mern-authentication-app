@@ -1,17 +1,29 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import avatar from '../assets/profile.png'
 import styles from '../styles/Username.module.css'
 import { useForm } from "react-hook-form";
+import toast from 'react-hot-toast';
 
-function Username() {
+export default function Username() {
+  const navigate = useNavigate();
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
   function handleFormSubmit(data) {
-    console.log(data)
+    toast.success(data.username, {
+      position: 'top-center',
+      duration: 2000
+    });  
     reset();
+    navigate('/password')
   }
-  
+
+  useEffect(() => {
+    if (errors.username) {
+      toast.error(errors.username?.message, {duration: 1000});
+    }
+  }, [errors.username])
+
   return (
     <>
       <div className=" w-screen h-screen">
@@ -26,9 +38,8 @@ function Username() {
                 <img alt='avtar' className={styles.profile_img} src={avatar} />
               </div>
               <div className="textbox flex  flex-col items-center">
-                <input type="text" placeholder='Username' className={styles.textbox} {...register('username', { required: true, minLength: { value: 3, message: 'Enter min 3 characters' } })} />
+                <input type="text" placeholder='Username' className={styles.textbox} {...register('username', { required: {value: true, message: 'Enter Username Required!'}, minLength: { value: 3, message: 'Enter min 3 characters' } })} />
                 <button type='submit' className={styles.btn}>Let's Go</button>
-                {errors.username && <p>{errors.username.message}</p>}
               </div>
               <div className="text-center py-4">
                 <span className='text-gray-500'>Not a member <Link to='/register' className='text-red-500'>Register Now</Link></span>
@@ -40,5 +51,3 @@ function Username() {
     </>
   )
 }
-
-export default Username
