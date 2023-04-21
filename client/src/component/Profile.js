@@ -57,8 +57,8 @@ export default function Profile() {
               </div>
               <div className="textbox flex flex-col items-center">
                 <div className='flex gap-4 mb-3 w-3/4'>
-                  <input type="text" placeholder='First Name *' className={styles.textbox} {...register('firstname', { ...validations.username })} />
-                  <input type="text" placeholder='Last Name' className={styles.textbox} {...register('lastname')} />
+                  <input type="text" placeholder='First Name *' className={styles.textbox} {...register('firstName', { ...validations.username })} />
+                  <input type="text" placeholder='Last Name' className={styles.textbox} {...register('lastName')} />
                 </div>
                 <div className='flex gap-4 mb-3 w-3/4'>
                   <input type="email" placeholder='Email *' className={styles.textbox} {...register('email', { ...validations.email })} />
