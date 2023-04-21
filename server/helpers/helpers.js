@@ -16,4 +16,9 @@ async function createJwt(payload, expiresIn = '24h') {
     return token;
 }
 
-module.exports = { hashKey, compareHashKey, createJwt }
+async function verifyJwt(token) {
+    const decodedToken = await jwt.verify(token, process.env.JWT_SECRETKEY);
+    return decodedToken;
+}
+
+module.exports = { hashKey, compareHashKey, createJwt, verifyJwt }

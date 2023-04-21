@@ -1,7 +1,7 @@
 const { hashKey, compareHashKey, createJwt } = require('../helpers/helpers');
 const UserModel = require('../model/User.model');
-const jwt = require('jsonwebtoken');
-
+const otpGenerator = require('otp-generator');
+  
 
 // Middleware for verify user
 async function verifyUser(req, res, next) {
@@ -104,7 +104,7 @@ async function getUser(req, res, next) {
         if (!username) { next('Enter Valid Username') }
 
         // Check whether username exists
-        const user = await UserModel.findOne({ username }, { _id: 0, __v: 0, password: 0 });
+        const user = await UserModel.findOne({ username }, { __v: 0, password: 0 });
         if (!user) { next("Username doesn't exists!"); return; };
 
         // Send Json Response
@@ -130,36 +130,125 @@ async function getUser(req, res, next) {
 */
 async function updateUser(req, res, next) {
     try {
-        const { } = req.params;
+        const { userId } = req.user;
+        if (!userId) { next('Enter Valid ID.'); return; }
 
+        // Fetching ID Data
+        const user = await UserModel.findOne({ _id: userId });
+        if (!user) { next("User Doesn't Exists"); return; }
 
-        res.send('Working on Update User Route')
+        //// Updating Part
+        const body = req.body;
+        const { email, username } = body;
+
+        // Checking whether username and email already exists
+        if (username) {
+            let usernameExists = await UserModel.findOne({ username });
+            if (usernameExists) { return next("Username Already Exists") };
+        }
+
+        if (email) {
+            let emailExists = await UserModel.findOne({ email });
+            if (emailExists) { return next("Email Already Exists") };
+        }
+
+        // Updating values in user field
+        await UserModel.updateOne({ _id: userId }, body);
+
+        // Fetching user details again
+        const userNewDetails = await UserModel.findOne({ _id: userId }, { password: 0, __v: 0 });
+
+        // Sending response 
+        res.status(200).send({
+            status: 'OK',
+            message: `User Details Updated Sucessfully!!!`,
+            userDetails: userNewDetails
+        });
     } catch (error) {
         next(error);
     }
 }
 
 // Get: http://localhost:8080/api/generateOTP
-async function generateOTP(req, res) {
-    res.send('generateOTP Route')
+async function generateOTP(req, res, next) {
+    try {
+        // Generate OTP and save it locally
+        req.app.locals.OTP = await otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false, lowerCaseAlphabets: false });
+
+        // Sending response 
+        res.status(200).send({
+            status: 'OK',
+            message: `OTP Generated Sucessfully!!!`,
+            code: req.app.locals.OTP,
+        });
+
+    } catch (error) {
+        next(error);
+    }
 }
 
 // Get: http://localhost:8080/api/verifyOTP
-async function verifyOTP(req, res) {
-    res.send('verifyOTP Route')
-}
+async function verifyOTP(req, res, next) {
+    try {
+        const { code } = req.query;
 
+        // Verify Otp
+        if (parseInt(code) !== parseInt(req.app.locals.OTP)) {
+            return next('Invalid OTP')
+        }
+
+        req.app.locals.OTP = null; // Reset otp
+        req.app.locals.resetSession = true; // start the session for reset 
+        res.status(201).send({
+            status: 'OK',
+            message: `OTP Verified Sucessfully!!!`,
+        });
+
+    } catch (error) {
+        next(error)
+    }
+}
 
 // Successfully redirect user when OTP is valid 
 // Get: http://localhost:8080/api/createResetSession
-async function createResetSession(req, res) {
-    res.send('createResetSession Route')
+async function createResetSession(req, res, next) {
+    try {
+        if (req.app.locals.resetSession) {
+            req.app.locals.resetSession = false;
+            return req.status(201).send({ message: 'Access Granted' })
+        }
+
+        next("Session Expired!")
+    } catch (error) {
+        next(error);
+    }
 }
 
 // Update password when the session is valid
-// Get: http://localhost:8080/api/resetPassword
-async function resetPassword(req, res) {
-    res.send('resetPassword Route')
+// Put: http://localhost:8080/api/resetPassword
+async function resetPassword(req, res, next) {
+    try {
+        if (!req.app.locals.resetSession) { next('Session Expired'); return; }
+
+        const { username, password } = req.body;
+
+        // Checking the exisiting user
+        const user = await UserModel.findOne({ username });
+        if (!user) { next("Username doesn't exists!"); return; };
+
+        // Hashing the Password
+        const hashPassword = await hashKey(password);
+
+        // Saving the password
+        user.password = hashPassword;
+        const result = await user.save();
+
+        req.app.locals.resetSession = false;
+        res.send('Password Updated Successfully!!!');
+
+    } catch (error) {
+        next(error);
+    }
 }
 
 

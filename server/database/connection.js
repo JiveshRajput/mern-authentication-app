@@ -5,7 +5,7 @@ const url = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}
 async function connectToDB() {
     mongoose.set("strictQuery", true);
     const res = await mongoose.connect(url);
-    console.log('DB: Connected');
+    console.log('Database: DB Connected successfully!!!');
     return res;
 }
 

@@ -1,37 +1,17 @@
 const router = require('express').Router();
-const controller = require('../controllers/routerController');
+const { register, verifyUser, login, getUser, generateOTP, verifyOTP, resetPassword, updateUser, createResetSession } = require('../controllers/routeController');
+const { auth, localVariables } = require('../middlewares/auth')
+const { registerMail } = require('../controllers/mailer')
 
-// Register the user
-router.route('/register').post(controller.register)
-
-// Send the email
-// router.route('/registerMail').post((req, res) => { res.json('Register Mail Route')})
-
-// Authenticate User
-router.route('/authenticate').post((req, res) => {
-    res.json('Authenticate Route')
-})
-
-// Login the User
-router.route('/login').post(controller.verifyUser, controller.login)
-
-// User with username
-router.route('/user/:username').get(controller.getUser)
-
-// Generate Random OTP
-router.route('/generateOTP').get(controller.generateOTP)
-
-// Verify Generate OTP
-router.route('/verifyOTP').get(controller.verifyOTP)
-
-// Reset All the Variables
-router.route('/createResetSession').get(controller.createResetSession)
-
-// Update user details
-router.route('/updateUser').put(controller.updateUser)
-
-// Reset Password
-router.route('/resetPassword').put(controller.resetPassword)
-
+router.route('/register').post(register) // Register the user
+router.route('/registerMail').post(registerMail) // Send the email
+router.route('/authenticate').post((req, res) => { res.json('Authenticate Route') }) // Authenticate User
+router.route('/login').post(verifyUser, login) // Login the User
+router.route('/user/:username').get(getUser) // User with username
+router.route('/generateOTP').get(verifyUser, localVariables, generateOTP) // Generate Random OTP
+router.route('/verifyOTP').get(verifyOTP) // Verify Generate OTP
+router.route('/createResetSession').get(createResetSession) // Reset All the Variables
+router.route('/updateUser').put(auth, updateUser) // Update user details
+router.route('/resetPassword').put(verifyUser, resetPassword) // Reset Password
 
 module.exports = router;
