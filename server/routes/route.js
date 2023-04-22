@@ -5,7 +5,7 @@ const { registerMail } = require('../controllers/mailer')
 
 router.route('/register').post(register) // Register the user
 router.route('/registerMail').post(registerMail) // Send the email
-router.route('/authenticate').post((req, res) => { res.json('Authenticate Route') }) // Authenticate User
+router.route('/authenticate').post(verifyUser, (req, res) => { res.end() }) // Authenticate User
 router.route('/login').post(verifyUser, login) // Login the User
 router.route('/user/:username').get(getUser) // User with username
 router.route('/generateOTP').get(verifyUser, localVariables, generateOTP) // Generate Random OTP

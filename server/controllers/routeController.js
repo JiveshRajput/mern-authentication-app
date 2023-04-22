@@ -176,7 +176,7 @@ async function generateOTP(req, res, next) {
         req.app.locals.OTP = await otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false, lowerCaseAlphabets: false });
 
         // Sending response 
-        res.status(200).send({
+        res.status(201).send({
             status: 'OK',
             message: `OTP Generated Sucessfully!!!`,
             code: req.app.locals.OTP,
