@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import avatar from '../assets/profile.png'
 import styles from '../styles/Username.module.css'
 import { useForm } from "react-hook-form";
-import toast from 'react-hot-toast';
 import { convertToBase64 } from '../helper/convert'
+import { errorToaster, successToaster } from '../helper/toasters';
+import { registerUser } from '../helper/axios';
 
 export default function Register() {
     const [file, setFile] = useState('');
     const { register, handleSubmit, reset, formState: { errors } } = useForm();
-
+    const navigate = useNavigate();
     const validations = {
         username: {
             required: { value: true, message: 'Username is Required!' },
@@ -29,28 +30,33 @@ export default function Register() {
         setFile(base64);
     }
 
-    function handleFormSubmit(data) {
-        toast.success('Successfully Logged In', { position: 'top-center', duration: 2000 });
-        console.log({ ...data, profile: file || '' });
+    async function handleFormSubmit(data) {
+        const response = await registerUser({ ...data, profile: file || '' });
+        if (response?.error) {
+            errorToaster(response?.error.response.data.error);
+            return;
+        }
+        successToaster(response.data.message);
+        navigate('/profile');
         reset();
     }
 
     // To Show Error Toast
     useEffect(() => {
         if (errors.password) {
-            toast.error(errors.password?.message, { duration: 1500 });
+            errorToaster(errors.password?.message, { duration: 1500 });
         }
     }, [errors.password])
 
     useEffect(() => {
         if (errors.username) {
-            toast.error(errors.username?.message, { duration: 1500 });
+            errorToaster(errors.username?.message, { duration: 1500 });
         }
     }, [errors.username])
 
     useEffect(() => {
         if (errors.email) {
-            toast.error(errors.email?.message, { duration: 1500 });
+            errorToaster(errors.email?.message, { duration: 1500 });
         }
     }, [errors.email])
 

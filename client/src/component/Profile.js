@@ -1,14 +1,28 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import avatar from '../assets/profile.png'
 import styles from '../styles/Username.module.css'
 import { useForm } from "react-hook-form";
-import toast from 'react-hot-toast';
 import { convertToBase64 } from '../helper/convert'
+import { errorToaster, successToaster } from "../helper/toasters";
+import useFetch from '../hooks/fetch.hook';
+import { updateUser } from '../helper/axios';
 
 export default function Profile() {
+  const [{ apiData }] = useFetch();
   const [file, setFile] = useState('');
-  const { register, handleSubmit, reset } = useForm();
+  const navigate = useNavigate();
+  let response = '';
+  const { register, handleSubmit } = useForm({
+    defaultValues: {
+      firstName: response?.data?.userDetails.firstName || apiData?.user.firstName || '',
+      lastName: response?.data?.userDetails.lastName || apiData?.user.lastName || '',
+      email: response?.data?.userDetails.email || apiData?.user.email || '',
+      mobileNo: response?.data?.userDetails.mobileNo || apiData?.user.mobileNo || '',
+      address: response?.data?.userDetails.address || apiData?.user.address || '',
+    },
+    values: response?.data || apiData?.user,
+  });
 
   const validations = {
     username: {
@@ -32,12 +46,20 @@ export default function Profile() {
     setFile(base64);
   }
 
-  function handleFormSubmit(data) {
-    toast.success('Details Changed Successfully!!!', { position: 'top-center', duration: 2000 });
-    console.log({ ...data, profile: file || '' });
-    reset();
+  async function handleFormSubmit(data) {
+    const values = { ...data, profile: file || apiData?.user.profile || '' };
+    response = await updateUser(values);
+    if (response?.error) {
+      errorToaster(response?.error.data.error)
+    } else {
+      successToaster('Details Changed Successfully!!!');
+    }
   }
 
+  function userLogout() {
+    localStorage.removeItem('token');
+    navigate('/')
+  }
 
   return (
     <>
@@ -51,13 +73,13 @@ export default function Profile() {
             <form className="py-1" onSubmit={handleSubmit(handleFormSubmit)}>
               <div className="profile flex justify-center py-4">
                 <label htmlFor='profile'>
-                  <img alt='avtar' className={styles.profile_img} src={file || avatar} />
+                  <img alt='avtar' className={styles.profile_img} src={file || apiData?.user.profile || avatar} />
                 </label>
                 <input type="file" id="profile" accept="image/png, image/jpeg" className='hidden' onChange={onImageUpload} />
               </div>
               <div className="textbox flex flex-col items-center">
                 <div className='flex gap-4 mb-3 w-3/4'>
-                  <input type="text" placeholder='First Name *' className={styles.textbox} {...register('firstName', { ...validations.username })} />
+                  <input type="text" placeholder='First Name *' className={styles.textbox} {...register('firstName', { ...validations.username, value: apiData?.user.username || '' })} />
                   <input type="text" placeholder='Last Name' className={styles.textbox} {...register('lastName')} />
                 </div>
                 <div className='flex gap-4 mb-3 w-3/4'>
@@ -70,7 +92,7 @@ export default function Profile() {
                 <button type='submit' className={styles.btn}>Update Details</button>
               </div>
               <div className="text-center py-4">
-                <span className='text-gray-500'>Come back later? <Link to='/' className='text-red-500'>Logout </Link></span>
+                <span className='text-gray-500'>Come back later? <button onClick={userLogout} className='text-red-500'>Logout </button></span>
               </div>
             </form>
           </div>

@@ -6,7 +6,9 @@ import Profile from './component/Profile'
 import Recovery from './component/Recovery'
 import Reset from './component/Reset'
 import PageNotFound from './component/PageNotFound'
-import  { Toaster } from 'react-hot-toast';
+import { Toaster } from 'react-hot-toast';
+import { AuthUser, ProtectRoute } from './middlewares/auth';
+
 function App() {
   return (
     <>
@@ -14,10 +16,10 @@ function App() {
         <Routes>
           <Route path='/' element={<Username />} />
           <Route path='/register' element={<Register />} />
-          <Route path='/password' element={<Password />} />
-          <Route path='/profile' element={<Profile />} />
-          <Route path='/recovery' element={<Recovery />} />
+          <Route path='/password' element={<ProtectRoute><Password /></ProtectRoute>} />
+          <Route path='/recovery' element={<ProtectRoute><Recovery /></ProtectRoute>} />
           <Route path='/reset' element={<Reset />} />
+          <Route path='/profile' element={<AuthUser><Profile /></AuthUser>} />
           <Route path='*' element={<PageNotFound />} />
         </Routes>
       </BrowserRouter>

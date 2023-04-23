@@ -1,18 +1,18 @@
 const { hashKey, compareHashKey, createJwt } = require('../helpers/helpers');
 const UserModel = require('../model/User.model');
 const otpGenerator = require('otp-generator');
-  
+
 
 // Middleware for verify user
 async function verifyUser(req, res, next) {
     try {
         const { username } = req.method === 'GET' ? req.query : req.body;
         let exists = await UserModel.findOne({ username });
-        if (!exists) { res.status(400).send("Username did not get find.") };
+        if (!exists) { res.status(404).send("Username did not get find."); return; };
         next();
 
     } catch (error) {
-        return res.send(400).send({ error: "Authentication failed" });
+        return res.send(401).send({ error: "Authentication failed" });
     }
 }
 
@@ -142,12 +142,12 @@ async function updateUser(req, res, next) {
         const { email, username } = body;
 
         // Checking whether username and email already exists
-        if (username) {
+        if (username && user.username != username) {
             let usernameExists = await UserModel.findOne({ username });
             if (usernameExists) { return next("Username Already Exists") };
         }
 
-        if (email) {
+        if (email && user.email != email) {
             let emailExists = await UserModel.findOne({ email });
             if (emailExists) { return next("Email Already Exists") };
         }
@@ -214,10 +214,8 @@ async function verifyOTP(req, res, next) {
 async function createResetSession(req, res, next) {
     try {
         if (req.app.locals.resetSession) {
-            req.app.locals.resetSession = false;
-            return req.status(201).send({ message: 'Access Granted' })
+            return res.status(201).send({ flag: req.app.locals.resetSession })
         }
-
         next("Session Expired!")
     } catch (error) {
         next(error);
