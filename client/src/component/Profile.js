@@ -42,6 +42,7 @@ export default function Profile() {
   }
 
   async function onImageUpload(e) {
+    console.log(e.target.files[0]);
     let base64 = await convertToBase64(e.target.files[0]);
     setFile(base64);
   }
